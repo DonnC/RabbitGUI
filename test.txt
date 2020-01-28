@@ -1,2 +1,0 @@
-from PIL import Image
-Image.open("sample1.jpg").save("sample1.png")
