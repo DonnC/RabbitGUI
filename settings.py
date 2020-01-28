@@ -6,6 +6,7 @@ from psutil import users
 comp_users = users()[0]
 uname = comp_users.name
 
+# Assume its Windows Environment
 top_level = r"C:\Users"
 
 root_dir  = path.dirname(__file__)
@@ -34,6 +35,7 @@ ICON                 = path.join(image_dir, "default-icon.ico")
 SAVE_IMAGE           = path.join(image_dir, "save1.png")
 DEFAULT_RABBIT_PIC   = path.join(images, "default-rabbit-pic.png")
 BANNER_GIF           = path.join(image_dir, "banner.gif")
+DEV_IMAGE            = path.join(images, "donn.png")
 
 # database handler
 DATABASE_URI         = path.join(data, DATABASE_NAME)
@@ -54,3 +56,13 @@ def img_folder():
             INIT_IMAGE_FOLDER = f"C:\\Users\\{uname}\\My Pictures"
 
         return INIT_IMAGE_FOLDER
+
+DEV_INFO = '''
+Add About us / About Developer here :)
+
+# Contact: +263778060126
+# Github : @DonnC
+
+__version__ 0.0.1
+@2019
+'''

@@ -4,7 +4,6 @@ import os
 import datetime
 import logging
 import shutil
-import send2trash
 
 from datetime import datetime as dtime
 from timestring import Date
@@ -42,6 +41,26 @@ def convert_image(image_file):
         print("No Convert: ", e)
         return path.basename(image_file)
 
+def check_alert(day, win_obj, pg=None):
+    # TODO:: Improve this algo to function properly | check alert
+    day = int(day)
+    if day < -1:
+        msg = "return date EXCEEDED!"
+        pg.PopupOK("Days Exceeded", text_color="firebrick")
+
+    elif day == -1:
+        msg = "return date is TODAY"
+        pg.PopupOK("Return today", text_color="springgreen")
+
+    elif day == 0:
+        msg = "return date is TOMORROW"
+        pg.PopupAutoClose("Reminder, tommorow", grab_anywhere=True)
+
+    else:
+        msg = "Good!"
+
+    return win_obj.FindElement("_DAYS_LEFT_ALERT_").Update(msg)
+
 def get_image(img):
     # return path to image
     img = path.join(images, img)
@@ -52,6 +71,7 @@ def get_image(img):
     return DEFAULT_RABBIT_PIC
 
 def cleanBorrowData(data):
+    # get data
     notes  = data.get("_ADDITIONAL_NOTES_")
     b_date = data.get('_BORROW_DATE_')
     owner  = data.get('_OWNER_')
@@ -79,6 +99,7 @@ def cleanBorrowData(data):
     return row
 
 def check_borrow():
+    # check if csv file exists with borrowed data. else create it with the headers given
     table_header = ['Owner', 'Sex', 'Color', 'Breed', 'Quantity', 'Location', 'Borrowed', 'Return', 'Image', 'Notes']
     if path.isfile(BORROWED_CSV) and path.exists(BORROWED_CSV):
         pass
@@ -89,61 +110,70 @@ def check_borrow():
         writer.writerow(table_header)
         bhand.close()
 
-def ReadBorrowTable():
-    # dont include 'Image' & 'Notes' in the table
-    check_borrow()
-    borrowed = open(BORROWED_CSV, "r")
-    reader = csv.reader(borrowed)
-    matrix_borrow = list(reader)
-    matrix_table = []
+def frame(matrix_borrow):
+    # create data for frame
     matrix_frame = []
 
-    for rows in matrix_borrow:
-        matrix_table.append(rows[:-2])
-
     for the_row in matrix_borrow:
-        added = the_row[6]
+        added     = the_row[6]
         returning = the_row[7]
         if not added.startswith("Bor") and not returning.startswith("Ret"):
-            date_obj = Date(added).date
+            date_obj     = Date(added).date
             ret_date_obj = Date(returning).date
-            now = dtime.now()
-            days_kept = now - date_obj
-            days_left = ret_date_obj - now
-            new_row = the_row
+            now          = dtime.now()
+            days_kept    = now - date_obj
+            days_left    = ret_date_obj - now
+            new_row      = the_row
             new_row.append(days_kept.days)
             new_row.append(days_left.days)
             matrix_frame.append(new_row)
 
+    return matrix_frame
+
+def ReadBorrowTable():
+    # dont include 'Image' & 'Notes' in the table
+    check_borrow()
+    borrowed      = open(BORROWED_CSV, "r")
+    reader        = csv.reader(borrowed)
+    matrix_borrow = list(reader)
+    matrix_table  = []
+    matrix_frame  = []
+
+    for rows in matrix_borrow:
+        matrix_table.append(rows[:-2])
+        matrix_frame.append(rows[:-2])
+
     borrowed.close()
 
-    if len(matrix_borrow) == 1:
+    if len(matrix_borrow) <= 1:
         # file is empty
         head = ['Owner', 'Sex', 'Color', 'Breed', 'Quantity', 'Location', 'Borrowed']
         matrix_table = [head, ['Null', 'Null', 'Null', 'Null', 'Null', 'Null', 'Null']]
-        return matrix_table, []
+        return matrix_table, [], matrix_frame
 
-    return matrix_table, matrix_frame
+    return matrix_table, matrix_borrow, matrix_frame
 
-def WriteBorrowTable(data):
+def WriteBorrowTable(data, all_rows=False):
     check_borrow()
-    row = cleanBorrowData(data)
-
+    table_header = ['Owner', 'Sex', 'Color', 'Breed', 'Quantity', 'Location', 'Borrowed', 'Return', 'Image', 'Notes']
     try:
-        borrow_info = open(BORROWED_CSV, "a", newline="")
-        writer = csv.writer(borrow_info)
-        writer.writerow(row)
-        print("Data inserted in csv file")
+        if all_rows:
+            borrow_info = open(BORROWED_CSV, "w", newline="")
+            writer      = csv.writer(borrow_info)
+            data        = data.insert(0, table_header)
+            writer.writerows(data)
+
+        else:
+            borrow_info = open(BORROWED_CSV, "a", newline="")
+            writer      = csv.writer(borrow_info)
+            row         = cleanBorrowData(data)
+            writer.writerow(row)
+            print("Info row added to file")
+
+        print("[INFO] Data inserted in csv file")
         borrow_info.close()
         return (True, 1)
 
     except Exception as e:
+        print("[ERROR] Could not write data to table. Error: ", e)
         return (None, e)
-
-'''
-table, frame = ReadBorrowTable()
-print("_"*80)
-pprint(frame)
-print("_"*80)
-pprint(table)
-'''
