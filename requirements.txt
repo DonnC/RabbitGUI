@@ -1,8 +1,8 @@
-Pillow==8.1.1
-psutil==5.6.3
-PyInstaller==3.4
-pyperclip==1.7.0
-PySimpleGUI==3.39.0
-PySimpleGUIWeb==0.28.1
-Send2Trash==1.5.0
-timestring==1.6.2
+Pillow>=8.1.1
+psutil>=5.6.6
+PyInstaller>=3.6
+pyperclip>=1.7.0
+PySimpleGUI>=3.39.0
+PySimpleGUIWeb>=0.28.1
+Send2Trash>=1.5.0
+timestring>=1.6.2
